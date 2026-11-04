@@ -62,6 +62,7 @@ navLinks.forEach(link => {
     if (target === 'holdings')  { loadHoldings(); loadStockOptions(); }
     if (target === 'stocks')    loadStocks();
     if (target === 'risk')      loadRisk();
+    if (target === 'dataviz')   loadDataViz();
   });
 });
 
@@ -69,6 +70,9 @@ navLinks.forEach(link => {
 let sectorChartInst     = null;
 let historyChartInst    = null;
 let riskSectorChartInst = null;
+let profitChartInst     = null;   // Chart 1 — Profit Analysis
+let dualLineChartInst   = null;   // Chart 2 — Profit & Revenue
+let sectorBarChartInst  = null;   // Chart 3 — Sector Bar / Pivot Table
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 
@@ -520,3 +524,142 @@ async function loadRisk() {
 // ── Initial load ──────────────────────────────────────────────────────────────
 // When the page first opens, load the dashboard
 loadDashboard();
+
+// ── DATA VISUALIZATIONS ───────────────────────────────────────────────────────
+// Mirrors the Python Data Visualization subject lab programs.
+// Data source: MySQL database via /api/holdings (instead of pd.read_csv)
+
+async function loadDataViz() {
+  try {
+    // Step 1: Fetch data from database (like: data = pd.read_csv('week4.csv'))
+    const res  = await fetch('/api/holdings');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+
+    if (!data || data.length === 0) {
+      alert('No holdings data found. Please add some holdings first.');
+      return;
+    }
+
+    // Step 2: Create calculated fields (like: data['Profit'] = data['Revenue'] - data['Cost'])
+    const products = data.map(h => h.symbol);                        // Product column
+    const revenue  = data.map(h => parseFloat(h.current_val));       // Revenue = Current Value
+    const cost     = data.map(h => parseFloat(h.invested));          // Cost    = Invested Amount
+    const profit   = revenue.map((r, i) => r - cost[i]);             // Profit  = Revenue - Cost
+
+    // ── CHART 1: Profit Analysis (Week 4, Program 1) ──────────────────────────
+    // Python: plt.plot(data['Product'], data['Profit'], color='green', marker='o')
+    if (profitChartInst) { profitChartInst.destroy(); }
+    profitChartInst = new Chart(document.getElementById('profitChart'), {
+      type: 'line',
+      data: {
+        labels: products,                      // x-axis = Products (Stocks)
+        datasets: [{
+          label: 'Profit (\u20b9)',
+          data:  profit,
+          borderColor:     'green',            // color='green'
+          backgroundColor: 'rgba(0,128,0,0.1)',
+          pointBackgroundColor: 'green',
+          pointRadius: 6,                      // marker='o'
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        plugins: {
+          title:  { display: true, text: 'Profit Analysis' },  // plt.title()
+          legend: { display: true }                            // plt.legend()
+        },
+        scales: {
+          x: { title: { display: true, text: 'Products (Stocks)' } },  // plt.xlabel()
+          y: { title: { display: true, text: 'Profit (\u20b9)' },      // plt.ylabel()
+               grid: { display: true } }                               // plt.grid(True)
+        }
+      }
+    });
+
+    // ── CHART 2: Profit & Revenue Dual Line (Week 4, Program 2) ──────────────
+    // Python: plt.plot(data['Product'], data['Profit'], label='profit')
+    //         plt.plot(data['Product'], data['Revenue'], label='revenue')
+    if (dualLineChartInst) { dualLineChartInst.destroy(); }
+    dualLineChartInst = new Chart(document.getElementById('dualLineChart'), {
+      type: 'line',
+      data: {
+        labels: products,
+        datasets: [
+          {
+            label: 'profit',                   // label='profit'
+            data:  profit,
+            borderColor: 'green',
+            pointBackgroundColor: 'green',
+            tension: 0.3
+          },
+          {
+            label: 'revenue',                  // label='revenue'
+            data:  revenue,
+            borderColor: '#2e5fa3',
+            pointBackgroundColor: '#2e5fa3',
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          title:  { display: true, text: 'Profit and Revenue Analysis' },  // plt.title()
+          legend: { display: true }                                        // plt.legend()
+        },
+        scales: {
+          x: { title: { display: true, text: 'Products (Stocks)' } },      // plt.xlabel()
+          y: { title: { display: true, text: 'Profit and Revenue (\u20b9)' } }  // plt.ylabel()
+        }
+      }
+    });
+
+    // ── CHART 3: Investment by Sector — Pivot Table (Week 5) ──────────────────
+    // Python: pivot = pd.pivot_table(data, values='Sales', index='Region', aggfunc='sum')
+    //         pivot.plot(kind='bar')
+
+    // Group by Sector and sum investment (this is the pivot table operation)
+    const sectorMap = {};
+    data.forEach(h => {
+      const sector = h.sector;
+      if (!sectorMap[sector]) sectorMap[sector] = 0;
+      sectorMap[sector] += parseFloat(h.invested);    // aggfunc='sum'
+    });
+    const sectorLabels = Object.keys(sectorMap);      // index='Region' → Sector
+    const sectorValues = Object.values(sectorMap);    // values='Sales' → Investment
+
+    if (sectorBarChartInst) { sectorBarChartInst.destroy(); }
+    sectorBarChartInst = new Chart(document.getElementById('sectorBarChart'), {
+      type: 'bar',                                    // kind='bar'
+      data: {
+        labels: sectorLabels,
+        datasets: [{
+          label: 'Total Investment by Sector (\u20b9)',
+          data:  sectorValues,
+          backgroundColor: ['#1a3a6b','#2e5fa3','#4a85d4','#6ba3e8','#9bbff0']
+        }]
+      },
+      options: {
+        plugins: {
+          title:  { display: true, text: 'Investment by Sector' },  // plt.title()
+          legend: { display: true }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Sector (Region)' },      // plt.xlabel()
+            ticks: { maxRotation: 45 }                              // plt.xticks(rotation=45)
+          },
+          y: {
+            title: { display: true, text: 'Total Investment (\u20b9)' },  // plt.ylabel()
+            grid:  { display: true }                                     // plt.grid(axis='y')
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('Data viz error:', err);
+    alert('Could not load Data Visualizations. Is the server running?');
+  }
+}

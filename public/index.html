@@ -26,6 +26,7 @@
       <li><a href="#" class="nav-link" data-section="holdings">My Holdings</a></li>
       <li><a href="#" class="nav-link" data-section="stocks">Stocks</a></li>
       <li><a href="#" class="nav-link" data-section="risk">Risk Analysis</a></li>
+      <li><a href="#" class="nav-link" data-section="dataviz">📊 Data Visuals</a></li>
       <li><a href="#" class="nav-link" data-section="about">About Project</a></li>
     </ul>
     <!-- Hamburger for mobile -->
@@ -270,6 +271,71 @@
       <div class="chart-container">
         <h3 class="chart-title">Sector Allocation</h3>
         <canvas id="riskSectorChart" width="320" height="320"></canvas>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 6: DATA VISUALIZATIONS
+    ═══════════════════════════════════════════════════════ -->
+    <section id="section-dataviz" class="section">
+      <h2 class="section-title">Data Visualizations</h2>
+      <p class="section-note">
+        These charts apply the same concepts from the <strong>Data Visualization using Python</strong> subject.
+        Instead of reading from a CSV file, data comes from the MySQL database.
+        The calculations (Profit = Revenue − Cost) and chart types are the same.
+      </p>
+
+      <!-- ── CHART 1: Profit Analysis ── -->
+      <div class="chart-container">
+        <h3 class="chart-title">Chart 1 — Profit Analysis per Stock</h3>
+        <p class="chart-desc">
+          <strong>Calculated Field:</strong> Profit = Current Value − Invested Amount
+          &nbsp;|&nbsp; <em>(same as: data['Profit'] = data['Revenue'] - data['Cost'])</em>
+        </p>
+        <canvas id="profitChart" height="100"></canvas>
+        <div class="python-code">
+          <strong>🐍 Python Equivalent (Week 4):</strong><br>
+          <code>data['Profit'] = data['Revenue'] - data['Cost']</code><br>
+          <code>plt.plot(data['Product'], data['Profit'], label='Profit', color='green', marker='o')</code><br>
+          <code>plt.title('Profit Analysis') &nbsp; plt.xlabel('Products') &nbsp; plt.ylabel('Profit')</code><br>
+          <code>plt.legend() &nbsp; plt.grid(True) &nbsp; plt.show()</code>
+        </div>
+      </div>
+
+      <!-- ── CHART 2: Profit & Revenue Dual Line ── -->
+      <div class="chart-container">
+        <h3 class="chart-title">Chart 2 — Profit &amp; Revenue (Current Value) Analysis</h3>
+        <p class="chart-desc">
+          Two lines on the same chart — <span style="color:green;">Profit</span> and
+          <span style="color:#2e5fa3;">Current Value (Revenue)</span> for each stock.
+        </p>
+        <canvas id="dualLineChart" height="100"></canvas>
+        <div class="python-code">
+          <strong>🐍 Python Equivalent (Week 4):</strong><br>
+          <code>plt.plot(data['Product'], data['Profit'],  label='profit')</code><br>
+          <code>plt.plot(data['Product'], data['Revenue'], label='revenue')</code><br>
+          <code>plt.title('Profit and Revenue Analysis')</code><br>
+          <code>plt.xlabel('Products') &nbsp; plt.ylabel('Profit and Revenue')</code><br>
+          <code>plt.legend() &nbsp; plt.show()</code>
+        </div>
+      </div>
+
+      <!-- ── CHART 3: Sector Bar Chart (Pivot Table) ── -->
+      <div class="chart-container">
+        <h3 class="chart-title">Chart 3 — Total Investment by Sector (Pivot Table)</h3>
+        <p class="chart-desc">
+          Holdings are <strong>grouped by Sector</strong> and total investment is summed.
+          This is exactly what a <strong>Pivot Table</strong> does in Python
+          (Region → Sector, Sales → Investment).
+        </p>
+        <canvas id="sectorBarChart" height="100"></canvas>
+        <div class="python-code">
+          <strong>🐍 Python Equivalent (Week 5):</strong><br>
+          <code>pivot = pd.pivot_table(data, values='Sales', index='Region', aggfunc='sum')</code><br>
+          <code>pivot.plot(kind='bar')</code><br>
+          <code>plt.title('Investment by Sector') &nbsp; plt.xlabel('Sector') &nbsp; plt.ylabel('Total Investment')</code><br>
+          <code>plt.xticks(rotation=45) &nbsp; plt.grid(axis='y') &nbsp; plt.show()</code>
+        </div>
       </div>
     </section>
 

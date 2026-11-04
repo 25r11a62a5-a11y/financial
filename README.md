@@ -1,9 +1,21 @@
 # Financial Portfolio Manager
 ### B.Tech DBMS College Project
 
-A simple web application to manage stock investment holdings, track portfolio values, and understand basic investment risk — built with **Node.js**, **Express.js**, **MySQL**, and plain HTML/CSS/JavaScript.
+A simple web application to manage stock investment holdings, track portfolio values, understand basic investment risk, and **visualize portfolio data with charts** — built with **Node.js**, **Express.js**, **MySQL**, and plain HTML/CSS/JavaScript.
 
 > ⚠️ All stock prices are **illustrative sample data**. This project does not connect to any live market feed.
+
+---
+
+## Features
+
+| Section | Description |
+|---------|-------------|
+| **Dashboard** | Summary cards (total investment, current value, P&L) + sector pie chart |
+| **My Holdings** | Add / view / delete stock holdings |
+| **Stocks** | View all stocks, update sample prices, see price history chart |
+| **Risk Analysis** | Low / Medium / High risk breakdown + sector allocation chart |
+| **📊 Data Visualizations** | 3 charts mirroring Python Data Visualization lab programs (Week 4 & 5) |
 
 ---
 
@@ -22,10 +34,13 @@ financial-portfolio/
 │   ├── holdings.js    ← GET/POST/DELETE /api/holdings
 │   ├── stocks.js      ← GET/PUT /api/stocks, GET /api/stocks/history/:id
 │   └── risk.js        ← GET /api/risk
-└── public/
-    ├── index.html     ← Single-page frontend
+├── public/
+    ├── index.html     ← Single-page frontend (6 sections including Data Visuals)
     ├── style.css      ← Stylesheet
-    └── script.js      ← Frontend JavaScript
+    └── script.js      ← Frontend JavaScript (includes loadDataViz() function)
+└── data_visualization/   ← Python data‑visualisation script and sample CSV
+    ├── visualization.py   ← pandas + matplotlib implementation
+    └── portfolio_data.csv ← sample portfolio data
 ```
 
 ---
@@ -148,6 +163,84 @@ Open your browser and go to:
 ### npm install errors
 - Make sure you are inside the project folder when running the command.
 - Try running PowerShell as Administrator.
+
+---
+
+## 📊 Data Visualizations Feature
+
+This feature connects the **Data Visualization using Python** subject with the DBMS project.
+Instead of reading from a CSV file (`pd.read_csv`), data comes from the **MySQL database** via the `/api/holdings` API.
+
+### Chart 1 — Profit Analysis (Week 4, Program 1)
+
+**Python code:**
+```python
+data['Profit'] = data['Revenue'] - data['Cost']
+plt.plot(data['Product'], data['Profit'], label='Profit', color='green', marker='o')
+plt.title('Profit Analysis')
+plt.xlabel('Products')  |  plt.ylabel('Profit')
+plt.legend()  |  plt.grid(True)  |  plt.show()
+```
+**JavaScript equivalent:**
+```javascript
+// Calculated field — same as data['Profit'] = data['Revenue'] - data['Cost']
+const profit = revenue.map((r, i) => r - cost[i]);
+
+new Chart(canvas, {
+  type: 'line',
+  data: { labels: products, datasets: [{ label: 'Profit', data: profit,
+          borderColor: 'green', pointRadius: 6 }] },  // color='green', marker='o'
+  options: { plugins: { title: { text: 'Profit Analysis' } },
+             scales: { x: { title: { text: 'Products (Stocks)' } },
+                       y: { title: { text: 'Profit (₹)' } } } }
+});
+```
+
+### Chart 2 — Profit & Revenue Analysis (Week 4, Program 2)
+
+**Python code:**
+```python
+plt.plot(data['Product'], data['Profit'],  label='profit')
+plt.plot(data['Product'], data['Revenue'], label='revenue')
+plt.title('Profit and Revenue Analysis')
+plt.xlabel('Products')  |  plt.ylabel('Profit and Revenue')
+plt.legend()  |  plt.show()
+```
+**JavaScript equivalent:**
+```javascript
+// Two datasets on the same chart — same as two plt.plot() calls
+datasets: [
+  { label: 'profit',  data: profit,  borderColor: 'green' },
+  { label: 'revenue', data: revenue, borderColor: 'blue'  }
+]
+```
+
+### Chart 3 — Investment by Sector — Pivot Table (Week 5)
+
+**Python code:**
+```python
+pivot = pd.pivot_table(data, values='Sales', index='Region', aggfunc='sum')
+pivot.plot(kind='bar')
+plt.title('Sales by Region')
+plt.xlabel('Region')  |  plt.ylabel('Total Sales')
+plt.xticks(rotation=45)  |  plt.grid(axis='y')  |  plt.show()
+```
+**JavaScript equivalent:**
+```javascript
+// Pivot table — group by Sector and sum investment (aggfunc='sum')
+const sectorMap = {};
+data.forEach(h => {
+  if (!sectorMap[h.sector]) sectorMap[h.sector] = 0;
+  sectorMap[h.sector] += parseFloat(h.invested);   // aggfunc='sum'
+});
+
+new Chart(canvas, {
+  type: 'bar',   // kind='bar'
+  data: { labels: Object.keys(sectorMap), datasets: [{ data: Object.values(sectorMap) }] },
+  options: { scales: { x: { ticks: { maxRotation: 45 } },   // plt.xticks(rotation=45)
+                       y: { grid: { display: true } } } }   // plt.grid(axis='y')
+});
+```
 
 ---
 
